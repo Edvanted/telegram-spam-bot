@@ -1,37 +1,52 @@
-import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+import logging
 
+# Токен бота
 TOKEN = "7382250158:AAE6DLfyjuTK-PmCAgDc9H9_7Tk0uKvNBto"
+
+# Разрешённые имена пользователей (Telegram usernames без "@")
 WHITELIST = ["mrgrgrv", "sbleskom_manager"]
 
-STOPWORDS = [
-    "заработок", "выиграй", "казино", "деньги", "доход", "инвестиции", "прибыль",
-    "криптовалюта", "бинанс", "ставки", "телеграм бот", "переходи", "вступай",
-    "акция", "рассылка", "подпишись", "купи", "продам", "даром", "скидка", "бонус",
-    "гарантия", "лёгкие деньги", "1xbet", "ставка", "биткойн", "forex", "crypto",
-    "успей", "услуги", "услуга", "разблокировать", "бесплатно", "обнажёнка", "эротика",
-    "секс", "18+", "порно", "porn", "xnxx", "xxx", "попрошайка", "help me", "нужна помощь",
-    "donate", "донат", "qiwi", "кошелёк", "соберите", "сбор", "пожертвование", "молитва"
+# Расширенный список стоп-слов
+STOP_WORDS = [
+    "заработок", "выиграй", "казино", "порно", "секс", "эротика", "онлайн казино", "играй", "платно",
+    "donate", "донат", "пожертвование", "розыгрыш", "bit.ly", "t.me/joinchat", "xxx", "🔞", "free",
+    "быстрые деньги", "инвестиции", "ставки", "букмекер", "crypto", "usdt", "btc", "porn", "onlyfans",
+    "sex", "viagra", "отправь", "получи", "пополни", "перейди по ссылке", "adult", "анонимно", "девушки"
 ]
 
 logging.basicConfig(level=logging.INFO)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
     message = update.effective_message
-
-    if user and user.username in WHITELIST:
+    if not message:
         return
 
-    text = (message.text or message.caption or "").lower()
+    # Проверка — обычный пользователь
+    if message.from_user and message.from_user.username:
+        username = message.from_user.username.lower()
+        if username in WHITELIST:
+            return
 
-    if any(word in text for word in STOPWORDS) or "http" in text or "t.me/" in text or "@" in text:
-        await message.delete()
-        logging.info(f"❌ Удалено сообщение от @{user.username if user else 'Unknown'}: {text}")
+    # Проверка — анонимный админ (от имени чата)
+    if message.sender_chat:
+        chat_admins = await message.chat.get_administrators()
+        for admin in chat_admins:
+            if admin.user and admin.user.username and admin.user.username.lower() in WHITELIST:
+                return  # Если этот админ в списке — не трогаем сообщение
+
+    # Проверка текста на стоп-слова и ссылки
+    text = (message.text or message.caption or "").lower()
+    if any(word in text for word in STOP_WORDS) or "http" in text or "t.me/" in text or "@" in text:
+        try:
+            await message.delete()
+            logging.info(f"❌ Удалено сообщение от: {text}")
+        except Exception as e:
+            logging.warning(f"Ошибка при удалении: {e}")
 
 if __name__ == "__main__":
-    print("✅ Бот успешно запущен и фильтрует спам...")
+    print("✅ Бот успешно запущен и фильтрует спам…")
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(MessageHandler(filters.ALL, handle_message))
     app.run_polling()
