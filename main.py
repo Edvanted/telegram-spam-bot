@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
-TOKEN = "123456789:ABCdefGhIJKlmnoPQRstuVwxyz1234567890"
+TOKEN = "7382250158:AAE6DLfyjuTK-PmCAgDc9H9_7Tk0uKvNBto"
 WHITELIST = ["mrgrgrv", "sbleskom_manager"]
 
 STOPWORDS = [
