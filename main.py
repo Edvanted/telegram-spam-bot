@@ -38,7 +38,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Проверка текста на стоп-слова и ссылки
     text = (message.text or message.caption or "").lower()
-    if any(word in text for word in STOP_WORDS) or "http" in text or "t.me/" in text or "@" in text:
+
+    # Условие: если есть стоп-слово ИЛИ ссылка, НО не наша ссылка
+    if (
+        any(word in text for word in STOP_WORDS)
+        or (("http" in text or "t.me/" in text or "@" in text) and "sbleskom.ru" not in text)
+    ):
         try:
             await message.delete()
             logging.info(f"❌ Удалено сообщение от: {text}")
