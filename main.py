@@ -1,8 +1,8 @@
 import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
-TOKEN = "7382250158:AAE6DLfyjuTK-PmCAgDc9H9_7Tk0uKvNBto"
+TOKEN = "твой_токен_бота"
 WHITELIST = ["mrgrgrv", "sbleskom_manager"]
 
 STOPWORDS = [
@@ -26,7 +26,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = (message.text or message.caption or "").lower()
 
-    # Проверка на стоп-слова и подозрительные символы
     if any(word in text for word in STOPWORDS) or "http" in text or "t.me/" in text or "@" in text:
         await message.delete()
         logging.info(f"❌ Удалено сообщение от @{user.username if user else 'Unknown'}: {text}")
